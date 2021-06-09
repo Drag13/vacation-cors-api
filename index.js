@@ -1,10 +1,12 @@
+const cors_proxy = require("cors-anywhere");
+
 // Listen on a specific host via the HOST environment variable
 const host = process.env.HOST || "0.0.0.0";
 // Listen on a specific port via the PORT environment variable
 const port = process.env.PORT || 8080;
-const localhosts = ["http://127.0.0.1:8887"];
+const localhosts = ["http://localhost:8887"];
 const whiteList = process.env.ALOWED ? [process.env.ALOWED] : localhosts;
-const cors_proxy = require("cors-anywhere");
+const timeLimitMs = 500;
 
 cors_proxy
   .createServer({
@@ -36,9 +38,12 @@ function deny(response, host) {
 
 let lastCall = Date.now();
 function checkRateLimit() {
+  if (process.env.NODE_ENV === "development") {
+    return;
+  }
   const now = Date.now();
   const delta = now - lastCall;
-  const isRateLimitExceeded = delta < 500;
+  const isRateLimitExceeded = delta < timeLimitMs;
   lastCall = now;
   return isRateLimitExceeded ? "Rate limit exceeded" : undefined;
 }
